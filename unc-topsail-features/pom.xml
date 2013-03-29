@@ -2,13 +2,13 @@
   <parent>
     <groupId>org.renci.gate.plugins.unc</groupId>
     <artifactId>topsail</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6-SNAPSHOT</version>
   </parent>
   <name>GATE :: Plugins :: UNC :: Topsail :: Features</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.renci.gate.plugins.unc.topsail</groupId>
   <artifactId>unc-topsail-features</artifactId>
-  <version>0.0.5</version>
+  <version>0.0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <build>
     <plugins>
