@@ -54,7 +54,7 @@ public class TopsailGATEService extends AbstractGATEService {
             logger.info("siteInfo: {}", getSite());
             logger.info("queueInfo: {}", queue);
             SLURMSSHFactory factory = SLURMSSHFactory.getInstance(getSite());
-            String hostAllow = "*.its.unc.edu";
+            String hostAllow = "*.unc.edu";
             job = factory.submitGlidein(submitDir, getCollectorHost(), queue, 40, "glidein", hostAllow, hostAllow);
             if (job != null && StringUtils.isNotEmpty(job.getId())) {
                 logger.info("job.getId(): {}", job.getId());
