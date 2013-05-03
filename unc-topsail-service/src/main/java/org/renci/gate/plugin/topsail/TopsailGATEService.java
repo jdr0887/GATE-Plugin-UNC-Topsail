@@ -147,8 +147,16 @@ public class TopsailGATEService extends AbstractGATEService {
             logger.info("siteInfo: {}", getSite());
             logger.info("queueInfo: {}", queue);
             String hostAllow = "*.unc.edu";
-            SLURMSSHSubmitCondorGlideinCallable callable = new SLURMSSHSubmitCondorGlideinCallable(getSite(), queue,
-                    submitDir, "glidein", getCollectorHost(), hostAllow, hostAllow, 40);
+            SLURMSSHSubmitCondorGlideinCallable callable = new SLURMSSHSubmitCondorGlideinCallable();
+            callable.setCollectorHost(getCollectorHost());
+            callable.setUsername(System.getProperty("user.name"));
+            callable.setSite(getSite());
+            callable.setJobName("glidein");
+            callable.setQueue(queue);
+            callable.setSubmitDir(submitDir);
+            callable.setRequiredMemory(40);
+            callable.setHostAllowRead(hostAllow);
+            callable.setHostAllowWrite(hostAllow);
             job = Executors.newSingleThreadExecutor().submit(callable).get();
             if (job != null && StringUtils.isNotEmpty(job.getId())) {
                 logger.info("job.getId(): {}", job.getId());
