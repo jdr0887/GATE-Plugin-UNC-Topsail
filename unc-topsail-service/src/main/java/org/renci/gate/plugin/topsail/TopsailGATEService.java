@@ -87,7 +87,6 @@ public class TopsailGATEService extends AbstractGATEService {
                             metricsMap.get(info.getQueue()).incrementRunning();
                             break;
                     }
-                    logger.debug("metric: {}", metric.toString());
                 }
             }
 
