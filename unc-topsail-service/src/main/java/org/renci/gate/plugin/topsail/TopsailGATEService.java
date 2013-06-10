@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.StringUtils;
 import org.renci.gate.AbstractGATEService;
+import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.slurm.SLURMJobStatusInfo;
@@ -39,7 +40,7 @@ public class TopsailGATEService extends AbstractGATEService {
     }
 
     @Override
-    public Map<String, GlideinMetric> lookupMetrics() {
+    public Map<String, GlideinMetric> lookupMetrics() throws GATEException {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
@@ -121,15 +122,15 @@ public class TopsailGATEService extends AbstractGATEService {
                     }
                 }
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
 
         return metricsMap;
     }
 
     @Override
-    public void createGlidein(Queue queue) {
+    public void createGlidein(Queue queue) throws GATEException {
         logger.info("ENTERING createGlidein(Queue)");
 
         if (StringUtils.isNotEmpty(getActiveQueues()) && !getActiveQueues().contains(queue.getName())) {
@@ -160,13 +161,13 @@ public class TopsailGATEService extends AbstractGATEService {
                 logger.info("job.getId(): {}", job.getId());
                 jobCache.add(job);
             }
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("Problem submitting: ", e);
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
     }
 
     @Override
-    public void deleteGlidein(Queue queue) {
+    public void deleteGlidein(Queue queue) throws GATEException {
         logger.info("ENTERING deleteGlidein(Queue)");
         if (jobCache.size() > 0) {
             try {
@@ -177,14 +178,14 @@ public class TopsailGATEService extends AbstractGATEService {
                 Executors.newSingleThreadExecutor().submit(callable).get();
                 logger.info("job: {}", job.toString());
                 jobCache.remove(0);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+            } catch (Exception e ) {
+                throw new GATEException(e);
             }
         }
     }
 
     @Override
-    public void deletePendingGlideins() {
+    public void deletePendingGlideins() throws GATEException {
         logger.info("ENTERING deletePendingGlideins()");
         try {
             SLURMSSHLookupStatusCallable lookupStatusCallable = new SLURMSSHLookupStatusCallable(getSite(), jobCache);
@@ -198,8 +199,8 @@ public class TopsailGATEService extends AbstractGATEService {
                 // throttle the deleteGlidein calls such that SSH doesn't complain
                 Thread.sleep(2000);
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (Exception e ) {
+            throw new GATEException(e);
         }
     }
 
