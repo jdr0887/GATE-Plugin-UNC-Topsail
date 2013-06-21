@@ -1,9 +1,6 @@
 <features name="gate-plugin-unc-topsail-${project.version}">
 
   <feature name="gate-plugin-unc-topsail" version="${project.version}" resolver="(obr)">
-    <bundle>mvn:org.renci.jlrm.jlrm-slurm/jlrm-slurm-api/${renci.jlrm.version}</bundle>
-    <bundle>mvn:org.renci.jlrm.jlrm-slurm/jlrm-slurm-cli/${renci.jlrm.version}</bundle>
-    <bundle>mvn:org.renci.jlrm.jlrm-slurm/jlrm-slurm-ssh/${renci.jlrm.version}</bundle>
     <bundle>mvn:org.renci.gate.plugins.unc.topsail/unc-topsail-service/${project.version}</bundle>
   </feature>
 
