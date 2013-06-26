@@ -1,14 +1,10 @@
 package org.renci.gate.plugin.topsail;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.StringUtils;
@@ -18,7 +14,6 @@ import org.renci.gate.GlideinMetric;
 import org.renci.jlrm.Queue;
 import org.renci.jlrm.slurm.SLURMJobStatusInfo;
 import org.renci.jlrm.slurm.SLURMJobStatusType;
-import org.renci.jlrm.slurm.ssh.SLURMSSHJob;
 import org.renci.jlrm.slurm.ssh.SLURMSSHKillCallable;
 import org.renci.jlrm.slurm.ssh.SLURMSSHLookupStatusCallable;
 import org.renci.jlrm.slurm.ssh.SLURMSSHSubmitCondorGlideinCallable;
@@ -33,8 +28,6 @@ public class TopsailGATEService extends AbstractGATEService {
 
     private final Logger logger = LoggerFactory.getLogger(TopsailGATEService.class);
 
-    private final List<SLURMSSHJob> jobCache = new ArrayList<SLURMSSHJob>();
-
     public TopsailGATEService() {
         super();
     }
@@ -45,7 +38,7 @@ public class TopsailGATEService extends AbstractGATEService {
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
         try {
-            SLURMSSHLookupStatusCallable callable = new SLURMSSHLookupStatusCallable(getSite(), jobCache);
+            SLURMSSHLookupStatusCallable callable = new SLURMSSHLookupStatusCallable(getSite());
             Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(callable).get();
             logger.debug("jobStatusSet.size(): {}", jobStatusSet.size());
 
@@ -55,14 +48,7 @@ public class TopsailGATEService extends AbstractGATEService {
                 for (SLURMJobStatusInfo info : jobStatusSet) {
                     queueSet.add(info.getQueue());
                 }
-                for (SLURMSSHJob job : jobCache) {
-                    queueSet.add(job.getQueueName());
-                }
-            }
 
-            Set<String> alreadyTalliedJobIdSet = new HashSet<String>();
-
-            if (jobStatusSet != null && jobStatusSet.size() > 0) {
                 for (SLURMJobStatusInfo info : jobStatusSet) {
                     if (metricsMap.containsKey(info.getQueue())) {
                         continue;
@@ -71,7 +57,6 @@ public class TopsailGATEService extends AbstractGATEService {
                         continue;
                     }
                     metricsMap.put(info.getQueue(), new GlideinMetric(0, 0, info.getQueue()));
-                    alreadyTalliedJobIdSet.add(info.getJobId());
                 }
 
                 for (SLURMJobStatusInfo info : jobStatusSet) {
@@ -91,38 +76,7 @@ public class TopsailGATEService extends AbstractGATEService {
                 }
             }
 
-            Iterator<SLURMSSHJob> jobCacheIter = jobCache.iterator();
-            while (jobCacheIter.hasNext()) {
-                SLURMSSHJob nextJob = jobCacheIter.next();
-                for (SLURMJobStatusInfo info : jobStatusSet) {
-
-                    if (!nextJob.getName().equals(info.getJobName())) {
-                        continue;
-                    }
-
-                    if (!alreadyTalliedJobIdSet.contains(nextJob.getId()) && nextJob.getId().equals(info.getJobId())) {
-                        GlideinMetric metric = metricsMap.get(info.getQueue());
-                        switch (info.getType()) {
-                            case PENDING:
-                                metricsMap.get(info.getQueue()).incrementPending();
-                                break;
-                            case RUNNING:
-                                metricsMap.get(info.getQueue()).incrementRunning();
-                                break;
-                            case CANCELLED:
-                            case COMPLETED:
-                            case FAILED:
-                            case TIMEOUT:
-                                jobCacheIter.remove();
-                                break;
-                            default:
-                                break;
-                        }
-                        logger.debug("metric: {}", metric.toString());
-                    }
-                }
-            }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             throw new GATEException(e);
         }
 
@@ -140,7 +94,6 @@ public class TopsailGATEService extends AbstractGATEService {
 
         File submitDir = new File("/tmp", System.getProperty("user.name"));
         submitDir.mkdirs();
-        SLURMSSHJob job = null;
 
         try {
             logger.info("siteInfo: {}", getSite());
@@ -156,12 +109,8 @@ public class TopsailGATEService extends AbstractGATEService {
             callable.setRequiredMemory(40);
             callable.setHostAllowRead(hostAllow);
             callable.setHostAllowWrite(hostAllow);
-            job = Executors.newSingleThreadExecutor().submit(callable).get();
-            if (job != null && StringUtils.isNotEmpty(job.getId())) {
-                logger.info("job.getId(): {}", job.getId());
-                jobCache.add(job);
-            }
-        } catch (Exception e ) {
+            Executors.newSingleThreadExecutor().submit(callable).get();
+        } catch (Exception e) {
             throw new GATEException(e);
         }
     }
@@ -169,18 +118,17 @@ public class TopsailGATEService extends AbstractGATEService {
     @Override
     public void deleteGlidein(Queue queue) throws GATEException {
         logger.info("ENTERING deleteGlidein(Queue)");
-        if (jobCache.size() > 0) {
-            try {
-                logger.info("siteInfo: {}", getSite());
-                logger.info("queueInfo: {}", queue);
-                SLURMSSHJob job = jobCache.get(0);
-                SLURMSSHKillCallable callable = new SLURMSSHKillCallable(getSite(), job.getId());
-                Executors.newSingleThreadExecutor().submit(callable).get();
-                logger.info("job: {}", job.toString());
-                jobCache.remove(0);
-            } catch (Exception e ) {
-                throw new GATEException(e);
-            }
+        try {
+            logger.info("siteInfo: {}", getSite());
+            logger.info("queueInfo: {}", queue);
+            SLURMSSHLookupStatusCallable lookupStatusCallable = new SLURMSSHLookupStatusCallable(getSite());
+            Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable)
+                    .get();
+            SLURMSSHKillCallable callable = new SLURMSSHKillCallable(getSite(), jobStatusSet.iterator().next()
+                    .getJobId());
+            Executors.newSingleThreadExecutor().submit(callable).get();
+        } catch (Exception e) {
+            throw new GATEException(e);
         }
     }
 
@@ -188,7 +136,7 @@ public class TopsailGATEService extends AbstractGATEService {
     public void deletePendingGlideins() throws GATEException {
         logger.info("ENTERING deletePendingGlideins()");
         try {
-            SLURMSSHLookupStatusCallable lookupStatusCallable = new SLURMSSHLookupStatusCallable(getSite(), jobCache);
+            SLURMSSHLookupStatusCallable lookupStatusCallable = new SLURMSSHLookupStatusCallable(getSite());
             Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable)
                     .get();
             for (SLURMJobStatusInfo info : jobStatusSet) {
@@ -199,7 +147,7 @@ public class TopsailGATEService extends AbstractGATEService {
                 // throttle the deleteGlidein calls such that SSH doesn't complain
                 Thread.sleep(2000);
             }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             throw new GATEException(e);
         }
     }
