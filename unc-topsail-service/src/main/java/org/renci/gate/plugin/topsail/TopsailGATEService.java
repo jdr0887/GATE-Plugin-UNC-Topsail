@@ -11,7 +11,9 @@ import org.apache.commons.lang.StringUtils;
 import org.renci.gate.AbstractGATEService;
 import org.renci.gate.GATEException;
 import org.renci.gate.GlideinMetric;
+import org.renci.jlrm.JLRMException;
 import org.renci.jlrm.Queue;
+import org.renci.jlrm.commons.ssh.SSHConnectionUtil;
 import org.renci.jlrm.slurm.SLURMJobStatusInfo;
 import org.renci.jlrm.slurm.SLURMJobStatusType;
 import org.renci.jlrm.slurm.ssh.SLURMSSHKillCallable;
@@ -30,6 +32,21 @@ public class TopsailGATEService extends AbstractGATEService {
 
     public TopsailGATEService() {
         super();
+    }
+
+    @Override
+    public Boolean isValid() throws GATEException {
+        logger.info("ENTERING isValid()");
+        try {
+            String results = SSHConnectionUtil.execute("ls /scratch/projects/mapseq | wc -l", getSite().getUsername(),
+                    getSite().getSubmitHost());
+            if (StringUtils.isNotEmpty(results) && Integer.valueOf(results.trim()) > 0) {
+                return true;
+            }
+        } catch (NumberFormatException | JLRMException e) {
+            throw new GATEException(e);
+        }
+        return false;
     }
 
     @Override
