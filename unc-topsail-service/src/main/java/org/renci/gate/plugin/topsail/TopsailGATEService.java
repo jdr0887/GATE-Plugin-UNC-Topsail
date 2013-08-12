@@ -54,6 +54,13 @@ public class TopsailGATEService extends AbstractGATEService {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
+        //stub out the metricsMap
+        Map<String, Queue> queueInfoMap = getSite().getQueueInfoMap();
+        for (String key : queueInfoMap.keySet()) {
+            Queue queue = queueInfoMap.get(key);
+            metricsMap.put(queue.getName(), new GlideinMetric(0, 0, queue.getName()));
+        }
+
         try {
             SLURMSSHLookupStatusCallable callable = new SLURMSSHLookupStatusCallable(getSite());
             Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(callable).get();
@@ -64,16 +71,6 @@ public class TopsailGATEService extends AbstractGATEService {
             if (jobStatusSet != null && jobStatusSet.size() > 0) {
                 for (SLURMJobStatusInfo info : jobStatusSet) {
                     queueSet.add(info.getQueue());
-                }
-
-                for (SLURMJobStatusInfo info : jobStatusSet) {
-                    if (metricsMap.containsKey(info.getQueue())) {
-                        continue;
-                    }
-                    if (!"glidein".equals(info.getJobName())) {
-                        continue;
-                    }
-                    metricsMap.put(info.getQueue(), new GlideinMetric(0, 0, info.getQueue()));
                 }
 
                 for (SLURMJobStatusInfo info : jobStatusSet) {
