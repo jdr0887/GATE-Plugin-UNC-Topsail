@@ -54,7 +54,7 @@ public class TopsailGATEService extends AbstractGATEService {
         logger.info("ENTERING lookupMetrics()");
         Map<String, GlideinMetric> metricsMap = new HashMap<String, GlideinMetric>();
 
-        //stub out the metricsMap
+        // stub out the metricsMap
         Map<String, Queue> queueInfoMap = getSite().getQueueInfoMap();
         for (String key : queueInfoMap.keySet()) {
             Queue queue = queueInfoMap.get(key);
@@ -123,6 +123,7 @@ public class TopsailGATEService extends AbstractGATEService {
             callable.setRequiredMemory(40);
             callable.setHostAllowRead(hostAllow);
             callable.setHostAllowWrite(hostAllow);
+            callable.setNumberOfProcessors("$(DETECTED_CORES)/2");
             Executors.newSingleThreadExecutor().submit(callable).get();
         } catch (Exception e) {
             throw new GATEException(e);
