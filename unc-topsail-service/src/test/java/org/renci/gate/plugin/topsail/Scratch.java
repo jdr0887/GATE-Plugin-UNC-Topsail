@@ -1,7 +1,9 @@
 package org.renci.gate.plugin.topsail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -29,7 +31,7 @@ public class Scratch {
         site.setMaxTotalPending(4);
         site.setMaxTotalRunning(4);
 
-        Map<String, Queue> queueInfoMap = new HashMap<String, Queue>();
+        List<Queue> queueList = new ArrayList<Queue>();
 
         Queue queue = new Queue();
         queue.setMaxJobLimit(10);
@@ -38,8 +40,8 @@ public class Scratch {
         queue.setWeight(1D);
         queue.setPendingTime(1440);
         queue.setRunTime(5760);
-        queueInfoMap.put("queue16", queue);
-        site.setQueueInfoMap(queueInfoMap);
+        queueList.add(queue);
+        site.setQueueList(queueList);
 
         try {
 
@@ -60,7 +62,7 @@ public class Scratch {
                     if (!"glidein".equals(info.getJobName())) {
                         continue;
                     }
-                    metricsMap.put(info.getQueue(), new GlideinMetric(0, 0, info.getQueue()));
+                    metricsMap.put(info.getQueue(), new GlideinMetric(site.getName(), info.getQueue(), 0, 0));
                 }
 
                 for (SLURMJobStatusInfo info : jobStatusSet) {
