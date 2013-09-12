@@ -28,18 +28,15 @@ public class Scratch {
         site.setProject("TCGA");
         site.setUsername("pipeline");
         site.setSubmitHost("topsail-sn.unc.edu");
-        site.setMaxTotalPending(4);
-        site.setMaxTotalRunning(4);
 
         List<Queue> queueList = new ArrayList<Queue>();
 
         Queue queue = new Queue();
-        queue.setMaxJobLimit(10);
-        queue.setMaxMultipleJobsToSubmit(2);
+        queue.setMaxPending(4);
+        queue.setMaxRunning(4);
         queue.setName("queue16");
         queue.setWeight(1D);
-        queue.setPendingTime(1440);
-        queue.setRunTime(5760);
+        queue.setRunTime(5760L);
         queueList.add(queue);
         site.setQueueList(queueList);
 
