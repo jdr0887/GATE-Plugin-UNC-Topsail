@@ -3,6 +3,7 @@ package org.renci.gate.service.topsail;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -131,9 +132,18 @@ public class TopsailGATEService extends AbstractGATEService {
             SLURMSSHLookupStatusCallable lookupStatusCallable = new SLURMSSHLookupStatusCallable(getSite());
             Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable)
                     .get();
-            SLURMSSHKillCallable callable = new SLURMSSHKillCallable(getSite(), jobStatusSet.iterator().next()
-                    .getJobId());
-            Executors.newSingleThreadExecutor().submit(callable).get();
+            Iterator<SLURMJobStatusInfo> iter = jobStatusSet.iterator();
+            while (iter.hasNext()) {
+                SLURMJobStatusInfo info = iter.next();
+                if (!info.getJobName().equals("glidein")) {
+                    continue;
+                }
+                logger.debug("deleting: {}", info.toString());
+                SLURMSSHKillCallable killCallable = new SLURMSSHKillCallable(getSite(), info.getJobId());
+                Executors.newSingleThreadExecutor().submit(killCallable).get();
+                // only delete one...engine will trigger next deletion
+                break;
+            }
         } catch (Exception e) {
             throw new GATEException(e);
         }
@@ -147,12 +157,16 @@ public class TopsailGATEService extends AbstractGATEService {
             Set<SLURMJobStatusInfo> jobStatusSet = Executors.newSingleThreadExecutor().submit(lookupStatusCallable)
                     .get();
             for (SLURMJobStatusInfo info : jobStatusSet) {
+                if (!info.getJobName().equals("glidein")) {
+                    continue;
+                }
                 if (info.getType().equals(SLURMJobStatusType.PENDING)) {
+                    logger.debug("deleting: {}", info.toString());
                     SLURMSSHKillCallable killCallable = new SLURMSSHKillCallable(getSite(), info.getJobId());
                     Executors.newSingleThreadExecutor().submit(killCallable).get();
+                    // throttle the deleteGlidein calls such that SSH doesn't complain
+                    Thread.sleep(2000);
                 }
-                // throttle the deleteGlidein calls such that SSH doesn't complain
-                Thread.sleep(2000);
             }
         } catch (Exception e) {
             throw new GATEException(e);
