@@ -19,7 +19,7 @@
     <property name="maxPending" value="${maxPending}" />
     <property name="maxRunning" value="${maxRunning}" />
     <property name="runTime" value="5760" />
-    <!-- <property name="numberOfProcessors" value="8" /> -->
+    <property name="numberOfProcessors" value="8" />
   </bean>
 
   <bean id="site" class="org.renci.jlrm.Site">
