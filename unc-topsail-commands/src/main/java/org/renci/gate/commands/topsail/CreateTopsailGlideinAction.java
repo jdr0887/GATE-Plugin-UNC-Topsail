@@ -49,7 +49,7 @@ public class CreateTopsailGlideinAction extends AbstractAction {
             callable.setCollectorHost(collectorHost);
             callable.setUsername(System.getProperty("user.name"));
             callable.setSite(site);
-            callable.setJobName("glidein");
+            callable.setJobName(String.format("glidein-%s", site.getName().toLowerCase()));
             callable.setQueue(queue);
             callable.setSubmitDir(submitDir);
             callable.setRequiredMemory(40);
