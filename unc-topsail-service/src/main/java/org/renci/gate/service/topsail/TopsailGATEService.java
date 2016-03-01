@@ -20,7 +20,6 @@ import org.renci.jlrm.slurm.SLURMJobStatusInfo;
 import org.renci.jlrm.slurm.SLURMJobStatusType;
 import org.renci.jlrm.slurm.ssh.SLURMSSHKillCallable;
 import org.renci.jlrm.slurm.ssh.SLURMSSHLookupStatusCallable;
-import org.renci.jlrm.slurm.ssh.SLURMSSHSubmitCondorGlideinCallable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TopsailGATEService extends AbstractGATEService {
 
-    private final Logger logger = LoggerFactory.getLogger(TopsailGATEService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TopsailGATEService.class);
 
     public TopsailGATEService() {
         super();
@@ -106,8 +105,7 @@ public class TopsailGATEService extends AbstractGATEService {
         try {
             logger.info("siteInfo: {}", getSite());
             logger.info("queueInfo: {}", queue);
-            String hostAllow = "*.unc.edu";
-            SLURMSSHSubmitCondorGlideinCallable callable = new SLURMSSHSubmitCondorGlideinCallable();
+            TopsailSubmitCondorGlideinCallable callable = new TopsailSubmitCondorGlideinCallable();
             callable.setCollectorHost(getCollectorHost());
             callable.setUsername(System.getProperty("user.name"));
             callable.setSite(getSite());
@@ -115,8 +113,8 @@ public class TopsailGATEService extends AbstractGATEService {
             callable.setQueue(queue);
             callable.setSubmitDir(submitDir);
             callable.setRequiredMemory(40);
-            callable.setHostAllowRead(hostAllow);
-            callable.setHostAllowWrite(hostAllow);
+            callable.setHostAllowRead(getHostAllow());
+            callable.setHostAllowWrite(getHostAllow());
             callable.setNumberOfProcessors("$(DETECTED_CORES)/2");
             Executors.newSingleThreadExecutor().submit(callable).get();
         } catch (Exception e) {
