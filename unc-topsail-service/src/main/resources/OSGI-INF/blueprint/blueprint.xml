@@ -8,6 +8,7 @@
       <cm:property name="maxRunning" value="20" />
       <cm:property name="submitHost" value="topsail-sn.unc.edu" />
       <cm:property name="collectorHost" value="biodev1.its.unc.edu" />
+      <cm:property name="hostAllow" value="*.unc.edu" />
       <cm:property name="activeQueues" value="queue16" />
       <cm:property name="username" value="" />
     </cm:default-properties>
@@ -38,6 +39,7 @@
     <property name="site" ref="site" />
     <property name="collectorHost" value="${collectorHost}" />
     <property name="activeQueues" value="${activeQueues}" />
+    <property name="hostAllow" value="${hostAllow}" />
     <cm:managed-properties persistent-id="org.renci.gate.service.topsail" update-strategy="container-managed" />
   </bean>
 
